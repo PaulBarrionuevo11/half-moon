@@ -12,6 +12,8 @@
 
 #define   DHTPIN    (5) // Pin number for temp/hum sensor
 #define   DHTTYPE   (DHT22)  
+#define LED_BUILTIN 2 // Or sometimes a custom name if needed
+
 const char* SSID = "Dhamma25";
 const char* PASSWORD = "Bonfire2025$$";
 const char* SERVER_URL = "http://10.0.0.110:5000/ingest";
@@ -22,6 +24,10 @@ float humid = 0;
 float batteryV = 0;
 const float dividerRatio = 10.0 / (30.0 + 10.0);  // ≈0.1667
 int samples = 50;
+
+const int redPin = 26;
+const int greenPin = 25;
+const int bluePin = 27;
 
 bool wifi_status = false;
 bool sensorStatus = false;
@@ -83,8 +89,8 @@ enum Lux_State luxState;
 /** Function prototypes **/ 
 /// SYSTEM CONFIGURATION ///
 void WifiConnection();
-void ConfigureLuxSensor(void);
 void DHTConnection();
+void ConfigureLuxSensor(void);
 void BatteryReading();
 
 /// LOGGING //
@@ -94,18 +100,28 @@ void LogData(const char* device_id, bool wifi_status, float tempC, float humid, 
 
 /// Send Logs to Server ///
 bool PostTelemetry(float tempC, float humidity, float light, float batteryV);
-bool PostInitLog();
-bool PostSystemLog();
+// bool PostInitLog(System_State systemState, Battery_State batteryState);
+// bool PostSystemLog();
 
 
 void setup() {
   Serial.begin(115200);
   dht.begin();
-  LogInit(systemState, batteryState);
+  // pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(redPin, OUTPUT);
+  pinMode(greenPin, OUTPUT);
+  pinMode(bluePin, OUTPUT);
 
-  WifiConnection();
-  ConfigureLuxSensor();
+  // digitalWrite(LED_BUILTIN, HIGH); Turn LED DURING system check
+  LogInit(systemState, batteryState);  
+  analogWrite(redPin, 0);   
+  analogWrite(greenPin, 255);   
+  analogWrite(bluePin, 0);
+  delay(200);  // Wait 1 second  
+
+  WifiConnection();               // If ERROR blinks 4 times for 400ms
   DHTConnection();
+  ConfigureLuxSensor();
   BatteryReading();  
 
   systemState = LOGGING;
@@ -120,41 +136,22 @@ void setup() {
   LogData(DEVICE_ID, wifi_status, tempC, humid, light, batteryV);
   Serial.flush();
   // Enable sleep
+  // delay(2000); 
+  analogWrite(redPin, 0);
+  analogWrite(greenPin, 0);
+  analogWrite(bluePin, 0);
+  delay(800);  // Wait 1 second
+
   esp_deep_sleep_start();
 }
 
- void loop() {
-    // unsigned long now = millis();
-    // if (now - lastSend >= PERIOD_MS || lastSend == 0) {
-    //   lastSend = now;
-    //   tempC = dht.readTemperature();
-    //   humid = dht.readHumidity();
-    //   // Serial.print("Temp in C:");
-    //   // Serial.println(tempC);
-    //   // Serial.print("Humid in RH %:");
-    //   // Serial.println(humid);
-  
-    //   // tsl.getEvent(&light);
-    //   // Serial.print("Luminosity: ");
-    //   // Serial.print(light.light); 
-    //   // Serial.println(" lux");
+void loop() {}
 
-    //   BatteryReading();
-
-    //   systemState = LOGGING;
-    //   Logs(DEVICE_ID, systemState, wifi_status, tempC, humid, light, batteryState);
-
-    //   if (!PostTelemetry(tempC, humid, light.light, batteryV)) {
-    //     Serial.println("Failed to send telemetry.");
-    //     // Logs(DEVICE_ID, systemState, wifi_status, tempC, humid, light, batteryState);
-    //   }
-    // }
-    // delay(50);
-    
-}
 void LogInit(System_State, Battery_State)
 {
   Serial.printf("LogInit | system=%d battery=%d \n", systemState, batteryState);
+  // PostInitLog(systemState, batteryState);
+
 }
 void LogSystem(System_State systemState, Battery_State batteryState, DHT_State dhtState, Lux_State luxState)
 {
@@ -163,7 +160,7 @@ void LogSystem(System_State systemState, Battery_State batteryState, DHT_State d
 
 void LogData(const char* device_id, bool wifi_status, float tempC, float humid, sensors_event_t lux, float batteryV)
 {
-  Serial.printf("LogData | id=%s wifi=%d temp=%0.2fC humid=%0.2f lux=%0.2f batteryV=%0.2fV \n", device_id, wifi_status, tempC, humid, lux.light, batteryV);
+  Serial.printf("LogData | id=%s wifi=%d temp=%0.0f humid=%0.0f lux=%0.1f batteryV=%0.1f \n", device_id, wifi_status, tempC, humid, lux.light, batteryV);
   systemState = SYNCING;
   PostTelemetry(tempC, humid, lux.light, batteryV);
 }
@@ -174,13 +171,20 @@ void WifiConnection()
   WiFi.begin(SSID, PASSWORD);
   while (WiFi.status() != WL_CONNECTED) 
   {
-      delay(1000);
+      delay(800);
       Serial.print(".");
       counter ++;
       if(counter == 20)
       {
         Serial.print("No WIFI connection established");
         wifi_status = false;
+        for (int i=0; i < 4; i++)
+        {
+          analogWrite(redPin, 255);
+          analogWrite(greenPin, 0);
+          analogWrite(bluePin, 0);
+          delay(1000);  // Wait 1 second
+        }
       }
   }
   wifi_status = true;
@@ -208,8 +212,12 @@ void ConfigureLuxSensor(void)
   Serial.println("------------------------------------");
 
   if(!tsl.getEvent(&light))
+  {
     DHT_State::DHT_ERROR;
-
+    analogWrite(redPin, 100);
+    analogWrite(greenPin, 0);
+    analogWrite(bluePin, 255);
+  }
   else
     tsl.getEvent(&light);
     Lux_State::LUX_OK; 
@@ -221,10 +229,18 @@ void DHTConnection()
   humid = dht.readHumidity();
 
   if (isnan(tempC) || isnan(humid))
+  {
     DHT_State::DHT_ERROR;
+    tempC = -1;
+    humid = -1;
+    analogWrite(redPin, 0);
+    analogWrite(greenPin, 0);
+    analogWrite(bluePin, 225);
+    delay(1000);
+    analogWrite(bluePin, 0);
+  }
 
-  else
-    DHT_State::DHT_OK;
+  DHT_State::DHT_OK;
 }
 void BatteryReading()
 {
@@ -260,8 +276,9 @@ void BatteryReading()
   // Serial.println("V");
 }
 bool PostTelemetry(float tempC, float humidity, float light, float batteryV) {
-  if (WiFi.status() != WL_CONNECTED) wifi_status = false;
+  if (WiFi.status() != WL_CONNECTED) WiFi_State::WIFI_ERROR;
 
+  WiFi_State::WIFI_OK;
   HTTPClient http;
   http.begin(SERVER_URL);
   http.addHeader("Content-Type", "application/json");
@@ -285,3 +302,31 @@ bool PostTelemetry(float tempC, float humidity, float light, float batteryV) {
   Serial.printf("POST %s -> code=%d resp=%s\n", SERVER_URL, code, resp.c_str());
   return (code >= 200 && code < 300);
 }
+
+// bool PostInitLog(System_State systemState, Battery_State batteryState)
+// {
+//    if (WiFi.status() != WL_CONNECTED) WiFi_State::WIFI_ERROR;
+
+//   WiFi_State::WIFI_OK;
+//   HTTPClient http;
+//   http.begin(SERVER_URL);
+//   http.addHeader("Content-Type", "application/json");
+
+//   int rssi = WiFi.RSSI();
+
+//   // Build JSON payload
+//   String body = "{";
+//   body += "\"device_id\":\"" + String(DEVICE_ID) + "\",";
+//   body += "\"system_state\":" + String(systemState) + ",";
+//   body += "\"battery_state\":" + String(batteryState) + ",";
+//   body += "\"rssi\":" + String(rssi);
+//   body += "}";
+
+//   int code = http.POST(body);
+//   String resp = http.getString();
+//   http.end();
+
+//   Serial.printf("POST %s -> code=%d resp=%s\n", SERVER_URL, code, resp.c_str());
+//   return (code >= 200 && code < 300);
+// }
+// bool PostSystemLog();
