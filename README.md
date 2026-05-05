@@ -1,22 +1,9 @@
 # Half Moon Station
-Half Moon helps you grow and maintain a thriving indoor garden.
+Half Moon is a smart meteo station designed for indoor plants, helping people care for their plants whether they live in a home or an apartment.
 
-Equipped with sensors for temperature, humidity and luminosity, this home station aims to make better decisions based on the conditions of the environment. 
-Future updates include interaction with AI through a mobile app. 
+It measures temperature, humidity, and light exposure directly in the plant’s environment, transforming that data into simple, actionable guidance.
 
-# Half Moon System
-It counts with two different systems: 1.Hardware (Station) 2.Backend
-
-## 1. Hardware (Station)
-The hardware has the following characteristics:
-- Temperature and humidity sensors for realiable monitoring of rooms.
-- Luminosity sensor for real-time light readings.
-- WIFI connection to HMB backend.
-- AI which improves better decision making for your plants (PENDING).
-
-## 2.Backend
-- Receive real time updates from the station.
-- Bidirectional communication between user and station.
+Built with both plant lovers and engineers in mind, Half Moon emphasizes reliability, clarity, and thoughtful design over unnecessary automation—making it a tool you can trust and a platform you can build on.
 
 
 
