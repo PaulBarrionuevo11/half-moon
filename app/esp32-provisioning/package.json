@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "android": {
+      "permissions": [
+        "BLUETOOTH_SCAN",
+        "BLUETOOTH_CONNECT",
+        "ACCESS_FINE_LOCATION"
+      ]
+    }
+  },
+  "dependencies": {
+    "expo": "^55.0.4"
+  }
+}

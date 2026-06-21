@@ -1,7 +1,8 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, Button, Text, View } from "react-native";
-import { getDeviceStatus } from "../../src/api/deviceProvisioning";
+// import { getDeviceStatus } from "../../src/api/deviceProvisioning";
+import { AppText } from "@/src/components/AppText";
 import { openWifiSettings } from "../../src/utils/openWifiSettings";
 
 export default function IntroScreen() {
@@ -13,7 +14,7 @@ export default function IntroScreen() {
     try {
       // This confirms the phone is connected to the station SoftAP,
       // because only then should 192.168.4.1 be reachable.
-      await getDeviceStatus();
+      // await getDeviceStatus();
       router.push("/onboarding/provision");
     } catch (e: any) {
       Alert.alert(
@@ -28,25 +29,29 @@ export default function IntroScreen() {
 
   return (
     <View style={{ flex: 1, padding: 20, gap: 14, justifyContent: "center" }}>
-      <Text style={{ fontSize: 26, fontWeight: "700" }}>First-time setup</Text>
+      <AppText variant="title"> 
+        First-time setup 
+      </AppText>
 
       <View style={{ borderWidth: 1, borderRadius: 14, padding: 14, gap: 10 }}>
-        <Text style={{ fontSize: 16, fontWeight: "700" }}>Steps</Text>
+        <AppText variant="subtitle"> 
+          Steps
+        </AppText>
 
-        <Text style={{ opacity: 0.85 }}>
-          1) Power on the Meteo Station.
-        </Text>
-        <Text style={{ opacity: 0.85 }}>
-          2) Wait until you see a green light.
-        </Text>
-        <Text style={{ opacity: 0.85 }}>
-          3) On your phone, open Wi-Fi settings and connect to:
+        <AppText variant="body"> 
+          1️⃣ Power on your Meteo Station.
+        </AppText>
+        <AppText variant="body"> 
+          2️⃣ Wait for a few seconds.
+        </AppText>
+        <AppText variant="body"> 
+          3️⃣ On your phone, open Wi-Fi settings and connect to:
           {"\n"}• Wi-Fi: <Text style={{ fontWeight: "700" }}>hmb-01</Text>
-          {"\n"}• Password: <Text style={{ fontWeight: "700" }}>XXXXX</Text>
-        </Text>
-        <Text style={{ opacity: 0.85 }}>
-          4) Return here and tap “I’m connected”.
-        </Text>
+          {"\n"}• Password: <Text style={{ fontWeight: "700" }}>123456789</Text>
+        </AppText>
+        <AppText variant="body"> 
+          4️⃣ Return here and tap “I’m connected”.
+        </AppText>
       </View>
 
       <Button title="Open Wi-Fi Settings" onPress={openWifiSettings} disabled={busy} />

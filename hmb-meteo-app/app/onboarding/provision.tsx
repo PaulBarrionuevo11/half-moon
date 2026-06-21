@@ -1,8 +1,10 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, Button, Text, TextInput, View } from "react-native";
-import { getDeviceStatus, provisionDevice } from "../../src/api/deviceProvisioning";
+// import { getDeviceStatus, provisionDevice } from "../../src/api/deviceProvisioning";
 import { markProvisioned, setWifiCredentials } from "../../src/storage/provisioning";
+import { ensureUser } from "../../src/storage/user";
+
 
 export default function ProvisionScreen() {
   const router = useRouter();
@@ -18,21 +20,22 @@ export default function ProvisionScreen() {
     setBusy(true);
     setStatusText("Checking station connection...");
     try {
-      await getDeviceStatus(); // confirms still connected to SoftAP
+      // await getDeviceStatus(); // confirms still connected to SoftAP
 
       setStatusText("Sending home Wi-Fi to station...");
-      await provisionDevice({
-        ssid: ssid.trim(),
-        password,
-        deviceName: "hmb-01", // optional label; you can change later
-      });
+      // await provisionDevice({
+      //   ssid: ssid.trim(),
+      //   password,
+      //   deviceName: "hmb-01", // optional label; you can change later
+      // });
 
       // Store locally (optional, but matches your earlier design)
       await setWifiCredentials(ssid.trim(), password);
+      await ensureUser();          // creates user if none exists
       await markProvisioned(true);
 
       setStatusText("Done ✅ Going to Home...");
-      router.replace("/home");
+      router.replace("/(tabs)/home");
     } catch (e: any) {
       setStatusText("");
       Alert.alert(
